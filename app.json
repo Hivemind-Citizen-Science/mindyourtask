@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mindyourtask-v0",
-    "slug": "mindyourtask-v0",
+    "name": "mindyourtask",
+    "slug": "mindyourtask",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,7 +14,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon-foreground.png",
+        "foregroundImage": "./assets/images/adaptive-icon-foreground.png",
         "backgroundColor": "#F9FAFB"
       },
       "package": "com.cervere.mindyourtask"
