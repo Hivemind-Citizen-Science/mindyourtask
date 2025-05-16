@@ -1,10 +1,16 @@
 #!/bin/sh
 
 #  ci_post_clone.sh
-#  mindyourtask 
+#  MindYourTask 
 #
 # Navigate to the project root
 cd ../../
+
+# Check if the ios directory is incomplete or incorrect
+if [ -d "ios" ] && [ ! -f "ios/Podfile" ]; then
+  echo "Detected partial ios directory. Removing it..."
+  rm -rf ios
+fi
 
 echo "===== Installling CocoaPods ====="
 export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
@@ -30,7 +36,5 @@ npm -v
 # Install dependencies
 echo "===== Running npm install ====="
 npm install --legacy-peer-deps
-#CI="true" npx expo prebuild --clean && eas build --profile dev-sim --platform ios --local
-echo "===== Running pod install ====="
-cd ios
-pod install
+CI="true" npx expo prebuild
+ls ios
