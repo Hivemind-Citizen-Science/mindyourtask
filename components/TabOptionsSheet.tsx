@@ -1,8 +1,9 @@
 // components/TabOptionsSheet.tsx
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Button } from 'react-native';
 import { BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import Slider from '@react-native-community/slider';
 
 export type TabOptionsSheetRef = {
   open: () => void;
@@ -14,9 +15,10 @@ type Props = {
 };
 
 export type Settings = {
-  dotShape: 'circle' | 'square';
+  canvasShape: 'circle' | 'square';
   dotBackground: string;
   dotColor: 'black' | 'white';
+  coherence: number;
 };
 
 const DOT_BACKGROUND_COLORS = ['#FFFFFF', '#DDDDDD', '#AAAAAA', '#333333', '#000000']; // Example palette
@@ -24,20 +26,34 @@ const DOT_BACKGROUND_COLORS = ['#FFFFFF', '#DDDDDD', '#AAAAAA', '#333333', '#000
 const TabOptionsSheet = forwardRef<TabOptionsSheetRef, Props>(({ onSettingsChange }, ref) => {
   const sheetRef = useRef<BottomSheet>(null);
 
-  const [dotShape, setDotShape] = useState<Settings['dotShape']>('circle');
+  const [canvasShape, setCanvasShape] = useState<Settings['canvasShape']>('circle');
   const [dotBackground, setDotBackground] = useState<Settings['dotBackground']>('#FFFFFF');
   const [dotColor, setDotColor] = useState<Settings['dotColor']>('black');
+  const [coherence, setCoherence] = useState<number>(0.3);
+  const [settingsChanged, setSettingsChanged] = useState<boolean>(false);
 
   useImperativeHandle(ref, () => ({
     open: () => {
       sheetRef.current?.expand();
+      setSettingsChanged(false);
     },
   }));
 
   const handleSettingChange = () => {
+    setSettingsChanged(true);
+  };
+
+  const applySettings = () => {
     if (onSettingsChange) {
-      onSettingsChange({ dotShape, dotBackground, dotColor });
+      onSettingsChange({ canvasShape, dotBackground, dotColor, coherence });
     }
+    setSettingsChanged(false);
+    sheetRef.current?.close();
+  };
+
+  const handleCanvasShapeChange = (shape: Settings['canvasShape']) => {
+    setCanvasShape(shape);
+    handleSettingChange();
   };
 
   const handleDotColorChange = (color: Settings['dotColor']) => {
@@ -55,13 +71,15 @@ const TabOptionsSheet = forwardRef<TabOptionsSheetRef, Props>(({ onSettingsChang
     setDotBackground(color);
     // Ensure contrast with dot color
     if (dotColor === 'white' && (color === '#FFFFFF' || color === '#DDDDDD' || color === '#AAAAAA')) {
-        // If user picks a light background with white dots, switch dots to black
-        // Alternatively, alert user or prevent this combination
         setDotColor('black');
     } else if (dotColor === 'black' && (color === '#333333' || color === '#000000')) {
-        // If user picks a dark background with black dots, switch dots to white
         setDotColor('white');
     }
+    handleSettingChange();
+  };
+
+  const handleCoherenceChange = (value: number) => {
+    setCoherence(value);
     handleSettingChange();
   };
 
@@ -84,18 +102,18 @@ const TabOptionsSheet = forwardRef<TabOptionsSheetRef, Props>(({ onSettingsChang
     >
       <BottomSheetView style={styles.contentContainer}>
         {/* Dot Display Shape */}
-        <Text style={styles.settingLabel}>Dot Display Shape</Text>
+        <Text style={styles.settingLabel}>Canvas Display Shape</Text>
         <View style={styles.optionsRow}>
           <TouchableOpacity
-            style={[styles.optionButton, dotShape === 'circle' && styles.selectedOption]}
-            onPress={() => { setDotShape('circle'); handleSettingChange(); }}
+            style={[styles.optionButton, canvasShape === 'circle' && styles.selectedOption]}
+            onPress={() => { handleCanvasShapeChange('circle'); }}
           >
             <View style={[styles.shapeIcon, styles.circleIcon]} />
             <Text>Circle</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.optionButton, dotShape === 'square' && styles.selectedOption]}
-            onPress={() => { setDotShape('square'); handleSettingChange(); }}
+            style={[styles.optionButton, canvasShape === 'square' && styles.selectedOption]}
+            onPress={() => { handleCanvasShapeChange('square'); }}
           >
             <View style={[styles.shapeIcon, styles.squareIcon]} />
             <Text>Square</Text>
@@ -138,6 +156,28 @@ const TabOptionsSheet = forwardRef<TabOptionsSheetRef, Props>(({ onSettingsChang
             onPress={() => handleDotColorChange('white')}
           />
         </View>
+
+        {/* Coherence Setting */}
+        <Text style={styles.settingLabel}>Coherence</Text>
+        <View style={styles.optionsRow}>
+          <Slider
+            style={{flex: 1}}
+            minimumValue={0}
+            maximumValue={1}
+            step={0.01} // Adjust step for desired precision
+            value={coherence}
+            onValueChange={(value: number) => {
+              handleCoherenceChange(value);
+            }}
+            minimumTrackTintColor="#007AFF" // iOS blue
+            maximumTrackTintColor="#DDDDDD"
+            thumbTintColor="#007AFF" // iOS blue
+          />
+          <Text style={styles.sliderValueText}>{coherence.toFixed(2)}</Text>
+        </View>
+
+        <Button title="Apply" onPress={applySettings} disabled={!settingsChanged} />
+
       </BottomSheetView>
     </BottomSheet>
   );
@@ -202,6 +242,11 @@ const styles = StyleSheet.create({
   dotColorWhite: {
     backgroundColor: 'white',
     borderColor: '#ccc', // Border for white to be visible on white background
+  },
+  sliderValueText: {
+    marginLeft: 10,
+    minWidth: 35,
+    textAlign: 'right',
   },
 });
 

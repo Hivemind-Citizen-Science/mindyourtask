@@ -10,7 +10,7 @@ import TrialComponent from '@/components/TaskComponents/TrialComponent';
 import taskService from '@/services/taskService';
 import { useRouter } from 'expo-router';
 import { ArrowBigLeft, ArrowBigRight } from 'lucide-react-native';
-import TabOptionsSheet, { TabOptionsSheetRef } from '@/components/TabOptionsSheet';
+import TabOptionsSheet, { TabOptionsSheetRef, Settings as TabSettings } from '@/components/TabOptionsSheet';
 
 const { width, height } = Dimensions.get('window');
 
@@ -62,6 +62,12 @@ const RandomDotMotionTask: React.FC = () => {
   const [responseValue, setResponseValue] = useState<Direction | null>(null);
   const [correctResponses, setCorrectResponses] = useState<number>(0);
   const [totalReactionTime, setTotalReactionTime] = useState<number>(0);
+  const [taskSettings, setTaskSettings] = useState<TabSettings>({ // Add state for settings
+    canvasShape: 'circle',
+    dotBackground: '#FFFFFF',
+    dotColor: 'black',
+    coherence: 0.3, // Default coherence, will be updated by sheet if changed
+  });
 
   // Task parameters
   const taskParams = useRef<TaskParameters>({
@@ -75,11 +81,30 @@ const RandomDotMotionTask: React.FC = () => {
   // Current trial data
   const currentTrial = trials[currentTrialIndex];
 
+  // Callback for when settings are changed in the sheet
+  const handleSettingsApply = (newSettings: TabSettings) => {
+    setTaskSettings(newSettings);
+    // Optionally, re-initialize or update task aspects based on newSettings
+    // For example, if coherence is a global setting rather than per-trial:
+    // taskParams.current.coherenceLevels = [newSettings.coherence]; // Or adjust how trials are generated
+
+    // If numTrials or other fundamental parameters change, you might need to re-initialize
+    // For now, we assume settings primarily affect visual aspects or per-trial parameters like coherence if it's made global.
+    // If the task is active (e.g., in 'stimulus' phase), you might want to handle this differently,
+    // or restrict settings changes to 'initial' phase.
+    // For simplicity, let's assume settings apply to the next set of trials or current if visual.
+    // We might need to regenerate trials if coherenceLevels are affected and fixed per session.
+    // Or, if coherence is dynamic per trial based on settings, update currentTrial if it's active.
+
+    // For now, just updating the state. If a re-initialization is needed:
+    initializeTask(newSettings); // Pass new settings to initializer
+  };
+
   // Reset task when screen gains focus
   useFocusEffect(
     useCallback(() => {
       console.log('Am I called?')
-      initializeTask();
+      initializeTask(taskSettings); // Pass current settings
 
       return () => {
         // Clean up if needed
@@ -88,9 +113,9 @@ const RandomDotMotionTask: React.FC = () => {
   );
 
   // Initialize the task
-  const initializeTask = async (): Promise<void> => {
+  const initializeTask = async (currentSettings: TabSettings): Promise<void> => { // Accept settings
     // if (!user || !activeTask) return;
-    console.log('Initializing task')
+    console.log('Initializing task with settings:', currentSettings)
     // Create a new session
     // const sessionResult = await taskService.createSession(user.id, activeTask.id);
 
@@ -130,14 +155,14 @@ const RandomDotMotionTask: React.FC = () => {
     for (let i = 0; i < numTrials; i++) {
       // Randomly select direction and coherence
       const direction = Math.random() < 0.5 ? 'left' : 'right';
-      const coherence = taskParams.current.coherenceLevels[
-        Math.floor(Math.random() * taskParams.current.coherenceLevels.length)
-      ];
+      
+      // Use coherence from taskSettings if it's meant to be fixed, or from coherenceLevels if varied per trial
+      const coherence = taskSettings.coherence; // Example: using the globally set coherence
 
       generatedTrials.push({
         parameters: {
           direction,
-          coherence,
+          coherence, // Use the coherence from settings
           dotCount: 100,
           speed: 5,
         },
@@ -288,6 +313,9 @@ const RandomDotMotionTask: React.FC = () => {
         speed={currentTrial?.parameters.speed || 5}
         width={width * 0.9}
         height={height * 0.4}
+        dotCanvasShape={taskSettings.canvasShape}
+        dotBackgroundColor={taskSettings.dotBackground}
+        dotColor={taskSettings.dotColor}
       />
       <View style={styles.restingContainer}>
         <View style={[styles.thumbRestArea,
@@ -388,7 +416,7 @@ const RandomDotMotionTask: React.FC = () => {
           Settings
         </Button>
       </View>
-      <TabOptionsSheet ref={sheetRef} />
+      <TabOptionsSheet ref={sheetRef} onSettingsChange={handleSettingsApply} />
       </SafeAreaView>
     );
   }
@@ -439,7 +467,7 @@ const RandomDotMotionTask: React.FC = () => {
         onFeedback={renderFeedback}
       />
     </View>
-    <TabOptionsSheet ref={sheetRef} />
+    <TabOptionsSheet ref={sheetRef} onSettingsChange={handleSettingsApply} />
     </SafeAreaView>
   );
 };

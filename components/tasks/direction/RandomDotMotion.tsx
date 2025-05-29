@@ -18,6 +18,7 @@ interface RandomDotMotionProps {
   height?: number;
   dotSize?: number;
   dotShape?: 'circle' | 'square';
+  dotCanvasShape?: 'circle' | 'square';
   dotBackgroundColor?: string;
   dotColor?: string;
 }
@@ -29,6 +30,7 @@ interface DotsCanvasProps {
   dotSize: number;
   themeColors: any;
   dotShape?: 'circle' | 'square';
+  dotCanvasShape: 'circle' | 'square';
   dotBackgroundColor?: string;
   dotColor?: string;
 }
@@ -53,6 +55,7 @@ const RandomDotMotion: React.FC<RandomDotMotionProps> = ({
   height = 1500,
   dotSize = 10,
   dotShape = 'circle',
+  dotCanvasShape = 'circle',
   dotBackgroundColor = '#FFFFFF',
   dotColor = 'black'
 }) => {
@@ -131,7 +134,19 @@ const RandomDotMotion: React.FC<RandomDotMotionProps> = ({
   // Custom component to render dots efficiently
   const DotsCanvas = React.forwardRef<View, DotsCanvasProps>((props, ref) => {
     return (
-      <View ref={ref} style={[styles.canvas, { width: props.width, height: props.height, backgroundColor: props.dotBackgroundColor }]}>
+      <View
+        ref={ref}
+        style={[
+          styles.canvas,
+          {
+            width: props.width,
+            height: props.height,
+            backgroundColor: props.dotBackgroundColor,
+            borderRadius: props.dotCanvasShape === 'circle' ? Math.min(props.width, props.height) / 2 : 0,
+            overflow: 'hidden',
+          },
+        ]}
+      >
         {props.dots.map((dot, index) => (
           <View
             key={index}
@@ -156,7 +171,7 @@ const RandomDotMotion: React.FC<RandomDotMotionProps> = ({
   
   return (
     <View style={[styles.container, { width, height }]}>
-      <DotsCanvas ref={canvasRef} width={width} height={height} dots={dots} dotSize={dotSize} themeColors={themeColors} dotShape={dotShape} dotBackgroundColor={dotBackgroundColor} dotColor={dotColor} />
+      <DotsCanvas ref={canvasRef} width={width} height={height} dots={dots} dotSize={dotSize} themeColors={themeColors} dotShape={dotShape} dotCanvasShape={dotCanvasShape} dotBackgroundColor={dotBackgroundColor} dotColor={dotColor} />
     </View>
   );
 };

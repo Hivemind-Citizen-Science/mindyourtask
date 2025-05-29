@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cervere.mindyourtask"
+      "bundleIdentifier": "com.cervere.mindyourtask",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -47,6 +50,9 @@
       "eas": {
         "projectId": "820533da-6033-4d40-b774-be037f50d3b3"
       }
+    },
+    "developmentClient": {
+      "silentLaunch": true
     }
   }
 }
