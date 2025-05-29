@@ -304,7 +304,8 @@ const RandomDotMotionTask: React.FC = () => {
 
   // Render function for the stimulus phase
   const renderStimulus = (): JSX.Element => (
-    <View style={styles.centeredContainer}>
+    // <View style={styles.centeredContainer}>
+    <View>
       <Text style={styles.instruction}>Which way are most dots moving?</Text>
       <RandomDotMotion
         dotCount={currentTrial?.parameters.dotCount || 100}
@@ -317,13 +318,13 @@ const RandomDotMotionTask: React.FC = () => {
         dotBackgroundColor={taskSettings.dotBackground}
         dotColor={taskSettings.dotColor}
       />
-      <View style={styles.restingContainer}>
+      {/* <View style={styles.restingContainer}>
         <View style={[styles.thumbRestArea,
           {
             borderColor: themeColors['color-primary-500'],
             pointerEvents: 'none' }]} />
         <Text style={styles.instruction}>Keep your thumb here...</Text>
-      </View>
+      </View> */}
     </View>
   );
 
@@ -336,11 +337,12 @@ const RandomDotMotionTask: React.FC = () => {
           handleResponse(direction, data.trajectory); // Pass data.trajectory for trajectoryData
         }
       }}
+      minVerticalSwipeDistance={100}
       style={styles.swipeContainer}
     >
       <View style={styles.responsePageLayout}>
         <View style={styles.responseContainer}>
-          <Text style={styles.instruction}>Swipe in the direction the dots were moving</Text>
+          {/* <Text style={styles.instruction}>Swipe in the direction the dots were moving</Text> */}
           <View style={styles.responseButtons}>
             <View style={styles.leftTarget}>
               <ArrowBigLeft color={themeColors['text-basic-color']} size={36} />
@@ -352,13 +354,13 @@ const RandomDotMotionTask: React.FC = () => {
         </View>
 
         <View style={[styles.restingContainer, styles.restingAreaPositioning]}>
-          <View style={[styles.thumbRestArea
+        <Text style={styles.instruction}>Place your thumb here...</Text>
+        <View style={[styles.thumbRestArea
           , {
           borderColor: themeColors['color-primary-500'],
           pointerEvents: 'none' }
           ]}
           />
-          <Text style={styles.instruction}>Place your thumb here...</Text>
         </View>
 
       </View>

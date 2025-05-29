@@ -19,6 +19,7 @@ interface SwipeTrackerProps {
   onSwipeMove?: (point: Point) => void;
   onSwipeEnd?: (point: Point) => void;
   onSwipeComplete?: (data: SwipeCompleteData) => void;
+  minVerticalSwipeDistance?: number;
   active?: boolean;
   style?: ViewStyle;
   children?: React.ReactNode;
@@ -27,18 +28,13 @@ interface SwipeTrackerProps {
 /**
  * SwipeTracker - A component that tracks swipe movements and trajectories
  * 
- * @param {function} onSwipeStart - Callback when swipe starts
- * @param {function} onSwipeMove - Callback with position data during swipe
- * @param {function} onSwipeEnd - Callback when swipe ends
- * @param {function} onSwipeComplete - Callback with complete trajectory data
- * @param {boolean} active - Whether tracking is active
- * @param {object} style - Custom styles
  */
 const SwipeTracker: React.FC<SwipeTrackerProps> = ({ 
   onSwipeStart, 
   onSwipeMove, 
   onSwipeEnd, 
   onSwipeComplete,
+  minVerticalSwipeDistance = 0,
   active = true,
   style,
   children
@@ -116,12 +112,18 @@ const SwipeTracker: React.FC<SwipeTrackerProps> = ({
         }
         
         if (onSwipeComplete && currentTrajectoryRef.current.length > 0) {
-          onSwipeComplete({
-            trajectory: currentTrajectoryRef.current,
-            duration: timestamp,
-            startPosition: currentTrajectoryRef.current[0],
-            endPosition: currentTrajectoryRef.current[currentTrajectoryRef.current.length - 1],
-          });
+          const startPosition = currentTrajectoryRef.current[0];
+          const endPosition = currentTrajectoryRef.current[currentTrajectoryRef.current.length - 1];
+          const verticalDistance = Math.abs(endPosition.y - startPosition.y);
+
+          if (verticalDistance >= minVerticalSwipeDistance) {
+            onSwipeComplete({
+              trajectory: currentTrajectoryRef.current,
+              duration: timestamp,
+              startPosition: startPosition,
+              endPosition: endPosition,
+            });
+          }
         }
         
         isTracking.current = false;
