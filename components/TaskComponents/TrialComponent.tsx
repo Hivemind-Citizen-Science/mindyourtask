@@ -1,10 +1,32 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+
+// Define the possible phases as a string literal union type
+type TrialPhase = 
+  | 'resting'
+  | 'stimulus'
+  | 'stimulus1'
+  | 'interval'
+  | 'stimulus2'
+  | 'response'
+  | 'feedback';
+
+interface TrialComponentProps {
+  phase: TrialPhase;
+  parameters?: Record<string, any>; // Or a more specific type if known
+  onResting?: () => React.ReactNode;
+  onStimulus?: () => React.ReactNode;
+  onStimulus1?: () => React.ReactNode;
+  onInterval?: () => React.ReactNode;
+  onStimulus2?: () => React.ReactNode;
+  onResponse?: () => React.ReactNode;
+  onFeedback?: () => React.ReactNode;
+}
 
 /**
  * TrialComponent - A flexible component that renders different content based on the current phase of a trial
  * 
- * @param {string} phase - Current phase of the trial (resting, stimulus, response, feedback, etc.)
+ * @param {TrialPhase} phase - Current phase of the trial (resting, stimulus, response, feedback, etc.)
  * @param {object} parameters - Parameters for the current trial
  * @param {function} onResting - Render function for the resting phase
  * @param {function} onStimulus - Render function for the stimulus phase
@@ -14,7 +36,7 @@ import { View, StyleSheet } from 'react-native';
  * @param {function} onResponse - Render function for the response phase
  * @param {function} onFeedback - Render function for the feedback phase
  */
-const TrialComponent = ({ 
+const TrialComponent: React.FC<TrialComponentProps> = ({ 
   phase, 
   parameters,
   onResting,
@@ -25,7 +47,7 @@ const TrialComponent = ({
   onResponse,
   onFeedback
 }) => {
-  const renderPhaseContent = () => {
+  const renderPhaseContent = (): React.ReactNode => {
     switch (phase) {
       case 'resting':
         return onResting ? onResting() : null;
@@ -49,6 +71,10 @@ const TrialComponent = ({
         return onFeedback ? onFeedback() : null;
       
       default:
+        // It's good practice to handle unexpected phase values,
+        // though TypeScript should prevent this if phase is correctly typed.
+        // You could throw an error or return a default UI element.
+        console.warn(`Unknown phase: ${phase}`);
         return null;
     }
   };
@@ -60,7 +86,11 @@ const TrialComponent = ({
   );
 };
 
-const styles = StyleSheet.create({
+interface Styles {
+  container: ViewStyle;
+}
+
+const styles = StyleSheet.create<Styles>({
   container: {
     borderWidth: 1,
     flex: 1,
@@ -70,4 +100,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TrialComponent;
+export default TrialComponent; 

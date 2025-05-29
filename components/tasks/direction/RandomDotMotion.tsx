@@ -2,6 +2,37 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '@ui-kitten/components';
 
+interface Dot {
+  x: number;
+  y: number;
+  isCoherent: boolean;
+  randomAngle: number;
+}
+
+interface RandomDotMotionProps {
+  dotCount?: number;
+  coherence?: number;
+  direction?: 'left' | 'right';
+  speed?: number;
+  width?: number;
+  height?: number;
+  dotSize?: number;
+  dotShape?: 'circle' | 'square';
+  dotBackgroundColor?: string;
+  dotColor?: string;
+}
+
+interface DotsCanvasProps {
+  width: number;
+  height: number;
+  dots: Dot[];
+  dotSize: number;
+  themeColors: any;
+  dotShape?: 'circle' | 'square';
+  dotBackgroundColor?: string;
+  dotColor?: string;
+}
+
 /**
  * RandomDotMotion - A component that displays a cloud of moving dots with coherent motion
  * 
@@ -13,19 +44,22 @@ import { useTheme } from '@ui-kitten/components';
  * @param {number} height - Height of the container
  * @param {number} dotSize - Size of each dot
  */
-const RandomDotMotion = ({ 
+const RandomDotMotion: React.FC<RandomDotMotionProps> = ({ 
   dotCount = 100, 
   coherence = 0.3, 
   direction = 'right', 
   speed = 1,
   width = 500,
   height = 1500,
-  dotSize = 10
+  dotSize = 10,
+  dotShape = 'circle',
+  dotBackgroundColor = '#FFFFFF',
+  dotColor = 'black'
 }) => {
   const { themeColors } = useTheme();
-  const animationFrameId = useRef(null);
-  const [dots, setDots] = useState([]);
-  const canvasRef = useRef(null);
+  const animationFrameId = useRef<number | null>(null);
+  const [dots, setDots] = useState<Dot[]>([]);
+  const canvasRef = useRef<View>(null);
   
   // Initialize dots with random positions
   useEffect(() => {
@@ -95,26 +129,9 @@ const RandomDotMotion = ({
   
   const DOT_RADIUS = 3;
   // Custom component to render dots efficiently
-  const DotsCanvas = React.forwardRef((props, ref) => {
-
+  const DotsCanvas = React.forwardRef<View, DotsCanvasProps>((props, ref) => {
     return (
-    //   <View style={[styles.dotsContainer, { width: props.width, height: props.height }]}>
-    //   {props.dots.map((dot, index) => (
-    //     <View
-    //       key={index}
-    //       style={{
-    //         position: "absolute",
-    //         width: DOT_RADIUS * 2,
-    //         height: DOT_RADIUS * 2,
-    //         backgroundColor: "black",
-    //         borderRadius: DOT_RADIUS,
-    //         left: dot.x,
-    //         top: dot.y,
-    //       }}
-    //     />
-    //   ))}
-    // </View>
-      <View ref={ref} style={[styles.canvas, { width: props.width, height: props.height }]}>
+      <View ref={ref} style={[styles.canvas, { width: props.width, height: props.height, backgroundColor: props.dotBackgroundColor }]}>
         {props.dots.map((dot, index) => (
           <View
             key={index}
@@ -123,11 +140,11 @@ const RandomDotMotion = ({
               {
                 width: props.dotSize,
                 height: props.dotSize,
-                borderRadius: props.dotSize / 2,
+                borderRadius: props.dotShape === 'circle' ? props.dotSize / 2 : 0,
                 left: dot.x,
                 top: dot.y,
                 zIndex: 1,
-                backgroundColor: 'black', 
+                backgroundColor: props.dotColor,
                 //props.themeColors.backgroundColor,
               },
             ]}
@@ -139,14 +156,13 @@ const RandomDotMotion = ({
   
   return (
     <View style={[styles.container, { width, height }]}>
-      <DotsCanvas ref={canvasRef} width={width} height={height} dots={dots} dotSize={dotSize} themeColors={themeColors} />
+      <DotsCanvas ref={canvasRef} width={width} height={height} dots={dots} dotSize={dotSize} themeColors={themeColors} dotShape={dotShape} dotBackgroundColor={dotBackgroundColor} dotColor={dotColor} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -167,4 +183,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(RandomDotMotion);
+export default React.memo(RandomDotMotion); 

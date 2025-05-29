@@ -1,6 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, ViewStyle } from 'react-native';
 import { useTheme, Text as Typography } from '@ui-kitten/components';
+
+interface PositionPerceptionProps {
+  isFirst?: boolean;
+  velocity?: number;
+  embeddedMotion?: number;
+  duration?: number;
+  width?: number;
+  height?: number;
+}
 
 /**
  * PositionPerception - A component that shows a moving patch that disappears after a set duration
@@ -12,7 +21,7 @@ import { useTheme, Text as Typography } from '@ui-kitten/components';
  * @param {number} width - Width of the container
  * @param {number} height - Height of the container
  */
-const PositionPerception = ({ 
+const PositionPerception: React.FC<PositionPerceptionProps> = ({ 
   isFirst = true,
   velocity = 40, 
   embeddedMotion = 0,
@@ -21,25 +30,25 @@ const PositionPerception = ({
   height = 300,
 }) => {
   const theme = useTheme();
-  const patchSize = 40;
+  const patchSize: number = 40;
   const patchAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
-  const [animationStarted, setAnimationStarted] = useState(false);
+  const [animationStarted, setAnimationStarted] = useState<boolean>(false);
   
   // Calculate effective velocity
-  const effectiveVelocity = velocity + embeddedMotion;
+  const effectiveVelocity: number = velocity + embeddedMotion;
   
   // Calculate distance to travel based on velocity and duration
   // Here we're simulating cm/sec in the pixel space
   // Using a scaling factor to convert velocity to pixels per second
-  const scalingFactor = 2; // Adjust this based on device screen density
-  const distance = (effectiveVelocity * duration / 1000) * scalingFactor;
+  const scalingFactor: number = 2; // Adjust this based on device screen density
+  const distance: number = (effectiveVelocity * duration / 1000) * scalingFactor;
   
   // Start position (left side)
-  const startPosition = patchSize / 2;
+  const startPosition: number = patchSize / 2;
   
   // End position
-  const endPosition = startPosition + distance;
+  const endPosition: number = startPosition + distance;
   
   useEffect(() => {
     // Start the animation after a short delay
@@ -83,13 +92,13 @@ const PositionPerception = ({
               { 
                 width: patchSize, 
                 height: patchSize,
-                backgroundColor: theme.colors.primary,
+                backgroundColor: theme['color-primary-500'],
                 transform: [{ translateX: patchTranslate }],
                 opacity: opacityAnim,
               }
             ]}
           >
-            <Typography variant="labelSmall" style={styles.patchLabel}>
+            <Typography category="label" style={styles.patchLabel}>
               {isFirst ? '1' : '2'}
             </Typography>
           </Animated.View>
@@ -99,7 +108,7 @@ const PositionPerception = ({
       {/* Visual indicator for fixation point */}
       <View style={styles.fixationPointContainer}>
         <View style={styles.fixationPoint} />
-        <Typography variant="bodySmall" style={styles.fixationLabel}>
+        <Typography category="p2" style={styles.fixationLabel}>
           Fixation point
         </Typography>
       </View>
@@ -154,4 +163,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PositionPerception;
+export default PositionPerception; 

@@ -1,78 +1,110 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
+import { View, StyleSheet, Dimensions, SafeAreaView, GestureResponderEvent } from 'react-native';
 import { Button, Text, useTheme } from '@ui-kitten/components';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTask } from '@/context/TaskContext';
-import RandomDotMotion from '@/components/TaskComponents/RandomDotMotion';
-import SwipeTracker from '@/components/TaskComponents/SwipeTracker';
+import RandomDotMotion from '@/components/tasks/direction/RandomDotMotion';
+import SwipeTracker, { SwipeCompleteData } from '@/components/TaskComponents/SwipeTracker'; // Assuming SwipeData is exported from SwipeTracker
 import TrialComponent from '@/components/TaskComponents/TrialComponent';
 import taskService from '@/services/taskService';
 import { useRouter } from 'expo-router';
 import { ArrowBigLeft, ArrowBigRight } from 'lucide-react-native';
+import TabOptionsSheet, { TabOptionsSheetRef } from '@/components/TabOptionsSheet';
 
 const { width, height } = Dimensions.get('window');
 
-const RandomDotMotionTask = () => {
+// Type Definitions
+type Phase = 'initial' | 'resting' | 'stimulus' | 'response' | 'feedback' | 'complete';
+type Direction = 'left' | 'right';
+
+interface TrialParameters {
+  direction: Direction;
+  coherence: number;
+  dotCount: number;
+  speed: number;
+}
+
+interface Trial {
+  parameters: TrialParameters;
+  expectedResponse: Direction;
+}
+
+interface TaskParameters {
+  numTrials: number;
+  restingTime: number; // ms
+  stimulusTime: number; // ms
+  feedbackTime: number; // ms
+  coherenceLevels: number[];
+}
+
+// Assuming a structure for Session based on usage, though API calls are commented out
+interface Session {
+  id: string; // or number, depending on your API
+  // Add other session properties if known
+}
+
+const RandomDotMotionTask: React.FC = () => {
   const router = useRouter();
-  const themeColors = useTheme();    
+  const themeColors = useTheme();
   const { user } = useAuth();
-  const { activeTask, markTaskComplete } = useTask();
-  
+//   const { activeTask, markTaskComplete } = useTask();
+  const sheetRef = useRef<TabOptionsSheetRef>(null);
+
   // Task state
-  const [phase, setPhase] = useState('initial'); // initial, resting, stimulus, response, feedback, complete
-  const [session, setSession] = useState(null);
-  const [trials, setTrials] = useState([]);
-  const [currentTrialIndex, setCurrentTrialIndex] = useState(0);
-  const [startTime, setStartTime] = useState(null);
-  const [responseStartTime, setResponseStartTime] = useState(null);
-  const [responseEndTime, setResponseEndTime] = useState(null);
-  const [responseValue, setResponseValue] = useState(null);
-  const [correctResponses, setCorrectResponses] = useState(0);
-  const [totalReactionTime, setTotalReactionTime] = useState(0);
-  
+  const [phase, setPhase] = useState<Phase>('initial');
+  const [session, setSession] = useState<Session | null>(null);
+  const [trials, setTrials] = useState<Trial[]>([]);
+  const [currentTrialIndex, setCurrentTrialIndex] = useState<number>(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [responseStartTime, setResponseStartTime] = useState<number | null>(null);
+  const [responseEndTime, setResponseEndTime] = useState<number | null>(null);
+  const [responseValue, setResponseValue] = useState<Direction | null>(null);
+  const [correctResponses, setCorrectResponses] = useState<number>(0);
+  const [totalReactionTime, setTotalReactionTime] = useState<number>(0);
+
   // Task parameters
-  const taskParams = useRef({
+  const taskParams = useRef<TaskParameters>({
     numTrials: 5,
     restingTime: 1000, // ms
     stimulusTime: 2000, // ms
     feedbackTime: 1000, // ms
     coherenceLevels: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
   });
-  
+
   // Current trial data
   const currentTrial = trials[currentTrialIndex];
-  
+
   // Reset task when screen gains focus
   useFocusEffect(
     useCallback(() => {
       console.log('Am I called?')
       initializeTask();
-      
+
       return () => {
         // Clean up if needed
       };
     }, [])
   );
-  
+
   // Initialize the task
-  const initializeTask = async () => {
+  const initializeTask = async (): Promise<void> => {
     // if (!user || !activeTask) return;
     console.log('Initializing task')
     // Create a new session
     // const sessionResult = await taskService.createSession(user.id, activeTask.id);
-    
+
     // if (!sessionResult.success) {
     //   console.error('Failed to create session:', sessionResult.error);
     //   return;
     // }
-    
+
     // setSession(sessionResult.data);
-    
+
     // Generate trials
     const newTrials = generateTrials(taskParams.current.numTrials);
     setTrials(newTrials);
-    
+
     // Record each trial in the database
     // await Promise.all(
     //   newTrials.map(async (trial, index) => {
@@ -84,25 +116,25 @@ const RandomDotMotionTask = () => {
     //     );
     //   })
     // );
-    
+
     setCurrentTrialIndex(0);
     setPhase('initial');
     setCorrectResponses(0);
     setTotalReactionTime(0);
   };
-  
+
   // Generate trials
-  const generateTrials = (numTrials) => {
-    const trials = [];
-    
+  const generateTrials = (numTrials: number): Trial[] => {
+    const generatedTrials: Trial[] = [];
+
     for (let i = 0; i < numTrials; i++) {
       // Randomly select direction and coherence
       const direction = Math.random() < 0.5 ? 'left' : 'right';
       const coherence = taskParams.current.coherenceLevels[
         Math.floor(Math.random() * taskParams.current.coherenceLevels.length)
       ];
-      
-      trials.push({
+
+      generatedTrials.push({
         parameters: {
           direction,
           coherence,
@@ -112,12 +144,12 @@ const RandomDotMotionTask = () => {
         expectedResponse: direction,
       });
     }
-    
-    return trials;
+
+    return generatedTrials;
   };
-  
+
   // Start the next trial
-  const startNextTrial = useCallback(() => {
+  const startNextTrial = useCallback((): void => {
     console.log('Starting', currentTrialIndex, trials.length)
     if (currentTrialIndex >= trials.length - 1) {
       // All trials complete
@@ -130,43 +162,44 @@ const RandomDotMotionTask = () => {
     setResponseStartTime(null);
     setResponseEndTime(null);
     setResponseValue(null);
-    
+
     // Advance to stimulus phase after resting time
     setTimeout(() => {
       setPhase('stimulus');
-      
+
       // Advance to response phase after stimulus time
       setTimeout(() => {
         setPhase('response');
         setResponseStartTime(Date.now());
       }, taskParams.current.stimulusTime);
     }, taskParams.current.restingTime);
-  }, [currentTrialIndex, trials]);
-  
+  }, [currentTrialIndex, trials]); // Removed completeSession from dependencies as it might cause re-renders
+
   // Handle response
-  const handleResponse = useCallback( (response, trajectoryData) => {
+  const handleResponse = useCallback( (response: Direction, trajectoryData: any): void => { // Assuming trajectoryData type from SwipeTracker or define if known
     console.log(phase)
     if (phase !== 'response') return;
     console.log('After phase consoel')
     const endTime = Date.now();
     setResponseEndTime(endTime);
     setResponseValue(response);
-  
+
     // Calculate reaction and movement time
-    const reactionTime = responseStartTime - (startTime + taskParams.current.restingTime); // Time to start moving
-    const movementTime = endTime - responseStartTime; // Time to complete movement
-  
+    // Ensure responseStartTime and startTime are not null before calculation
+    const reactionTime = responseStartTime && startTime ? responseStartTime - (startTime + taskParams.current.restingTime) : 0; // Time to start moving
+    const movementTime = responseStartTime && endTime ? endTime - responseStartTime : 0; // Time to complete movement
+
     const isCorrect = response === currentTrial.expectedResponse;
-  
+
     // Update stats
     if (isCorrect) {
       setCorrectResponses(prev => prev + 1);
     }
     setTotalReactionTime(prev => prev + reactionTime);
-  
+
     // Record the response in the database
     const trialId = currentTrialIndex + 1; // Assume trial IDs are 1-indexed
-  
+
     // const responseResult = await taskService.recordResponse(
     //   trialId,
     //   response,
@@ -174,7 +207,7 @@ const RandomDotMotionTask = () => {
     //   movementTime,
     //   isCorrect
     // );
-  
+
     // if (responseResult.success) {
     //   // Record trajectory data
     //   await taskService.recordTrajectory(
@@ -182,24 +215,24 @@ const RandomDotMotionTask = () => {
     //     trajectoryData
     //   );
     // }
-  
+
     // Show feedback
     setPhase('feedback');
-    const nextTrialIndex = currentTrialIndex + 1;
-  
+    // const nextTrialIndex = currentTrialIndex + 1; // This was unused
+
     // Advance to next trial after feedback time
     setTimeout(() => {
       startNextTrial();
     }, taskParams.current.feedbackTime);
-  }, [currentTrialIndex, phase, responseStartTime, startTime, taskParams, currentTrial]);
-  
-  
-  
+  }, [currentTrialIndex, phase, responseStartTime, startTime, taskParams, currentTrial, startNextTrial]); // Added startNextTrial to dependencies
+
+
+
   // Complete the session
-  const completeSession =  () => {
-    
+  const completeSession =  (): void => {
+
     setPhase('complete');
-    
+
     // Mark task as complete in context
     // markTaskComplete(activeTask.id);
     console.log(session)
@@ -212,43 +245,43 @@ const RandomDotMotionTask = () => {
     //   correctResponses,
     //   totalReactionTime
     // );
-    
+
   };
-  
+
   // Determine swipe direction from trajectory
-  const getSwipeDirection = (trajectoryData) => {
+  const getSwipeDirection = (trajectoryData: SwipeCompleteData | null): Direction | null => { // Using SwipeData from import
     if (!trajectoryData || trajectoryData.trajectory.length < 2) return null;
-    
+
     const startPos = trajectoryData.startPosition;
     const endPos = trajectoryData.endPosition;
-    
+
     // Calculate horizontal movement
     const deltaX = endPos.x - startPos.x;
-    
+
     // Determine direction based on horizontal movement
     if (Math.abs(deltaX) < 20) return null; // Threshold for valid swipe
     return deltaX > 0 ? 'right' : 'left';
   };
-  
+
   // Render function for the resting phase
-  const renderResting = () => (
+  const renderResting = (): JSX.Element => (
     <View style={styles.centeredContainer}>
     <View style={[styles.restingContainer]}>
-      <View style={[styles.thumbRestArea, 
+      <View style={[styles.thumbRestArea,
         {
-          // backgroundColor: 'transparent', 
-          borderColor: themeColors['color-primary-500'], 
+          // backgroundColor: 'transparent',
+          borderColor: themeColors['color-primary-500'],
           pointerEvents: 'none' }]} />
       <Text style={styles.instruction}>Keep your thumb here...</Text>
     </View>
     </View>
   );
-  
+
   // Render function for the stimulus phase
-  const renderStimulus = () => (
+  const renderStimulus = (): JSX.Element => (
     <View style={styles.centeredContainer}>
       <Text style={styles.instruction}>Which way are most dots moving?</Text>
-      <RandomDotMotion 
+      <RandomDotMotion
         dotCount={currentTrial?.parameters.dotCount || 100}
         coherence={currentTrial?.parameters.coherence || 0.3}
         direction={currentTrial?.parameters.direction || 'right'}
@@ -257,22 +290,22 @@ const RandomDotMotionTask = () => {
         height={height * 0.4}
       />
       <View style={styles.restingContainer}>
-        <View style={[styles.thumbRestArea, 
-          { 
-            borderColor: themeColors['color-primary-500'], 
+        <View style={[styles.thumbRestArea,
+          {
+            borderColor: themeColors['color-primary-500'],
             pointerEvents: 'none' }]} />
         <Text style={styles.instruction}>Keep your thumb here...</Text>
       </View>
     </View>
   );
-  
+
   // Render function for the response phase
-  const renderResponse = () => (
+  const renderResponse = (): JSX.Element => (
     <SwipeTracker
-      onSwipeComplete={(data) => {
+      onSwipeComplete={(data) => { // data is SwipeData
         const direction = getSwipeDirection(data);
         if (direction) {
-          handleResponse(direction, data.trajectory);
+          handleResponse(direction, data.trajectory); // Pass data.trajectory for trajectoryData
         }
       }}
       style={styles.swipeContainer}
@@ -292,10 +325,10 @@ const RandomDotMotionTask = () => {
 
         <View style={[styles.restingContainer, styles.restingAreaPositioning]}>
           <View style={[styles.thumbRestArea
-          , { 
+          , {
           borderColor: themeColors['color-primary-500'],
           pointerEvents: 'none' }
-          ]} 
+          ]}
           />
           <Text style={styles.instruction}>Place your thumb here...</Text>
         </View>
@@ -303,16 +336,16 @@ const RandomDotMotionTask = () => {
       </View>
     </SwipeTracker>
   );
-  
+
   // Render function for the feedback phase
-  const renderFeedback = () => {
+  const renderFeedback = (): JSX.Element => {
     const isCorrect = responseValue === currentTrial?.expectedResponse;
-    
+
     return (
       <View style={styles.centeredContainer}>
-        <Text 
+        <Text
           style={[
-            styles.feedbackText, 
+            styles.feedbackText,
             // { color: isCorrect ? themeColors['success'] : themeColors['error'] }
           ]}
         >
@@ -321,7 +354,7 @@ const RandomDotMotionTask = () => {
       </View>
     );
   };
-  
+
   // Render initial screen
   if (phase === 'initial') {
     return (
@@ -331,48 +364,56 @@ const RandomDotMotionTask = () => {
           Random Dot Motion Task
         </Text>
         <Text style={styles.description}>
-          In this task, you'll see a cloud of moving dots. Some dots move randomly, 
-          while others move coherently left or right. Your job is to determine 
+          In this task, you'll see a cloud of moving dots. Some dots move randomly,
+          while others move coherently left or right. Your job is to determine
           which direction most dots are moving.
         </Text>
         <Text style={[styles.description, { marginTop: 20 }]}>
           You'll complete {taskParams.current.numTrials} trials. After seeing the dots,
           swipe in the direction you think most dots were moving.
         </Text>
-        
-        <Button 
+
+        <Button
           onPress={() => startNextTrial()}
           style={styles.button}
-          contentStyle={styles.buttonContent}
+          // contentStyle={styles.buttonContent} // contentStyle is not a valid prop for Button in @ui-kitten/components
         >
           Start Task
         </Button>
+        <Button
+          onPress={() => sheetRef.current?.open()}
+          style={styles.button}
+          appearance="outline" // Optional: to differentiate from Start Task button
+        >
+          Settings
+        </Button>
       </View>
+      <TabOptionsSheet ref={sheetRef} />
       </SafeAreaView>
     );
   }
-  
+
   // Render completion screen
   if (phase === 'complete') {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: themeColors['background-basic-color-1'] }]}>
       <View style={styles.container}>
         <Text category="h1" style={styles.title}>
-          Task Complete!
+          Task Completeddddd!
         </Text>
         <Text style={styles.description}>
           Great job! You correctly identified {correctResponses} out of {trials.length} dot patterns.
         </Text>
         <Text style={[styles.description, { marginTop: 20 }]}>
-          Your average reaction time was {Math.round(totalReactionTime / trials.length)} milliseconds.
+          Your average reaction time was {trials.length > 0 ? Math.round(totalReactionTime / trials.length) : 0} milliseconds.
         </Text>
-        
-        <Button 
+
+        <Button
           onPress={() => {
-            router.replace('/(tasks)')
+            router.replace('/(main)/settings')
           }}
           style={styles.button}
-          contentStyle={styles.buttonContent}
+          // contentStyle={styles.buttonContent} // contentStyle is not a valid prop for Button in @ui-kitten/components
         >
           Back to Tasks
         </Button>
@@ -380,7 +421,7 @@ const RandomDotMotionTask = () => {
       </SafeAreaView>
     );
   }
-  
+
   // Render main trial component
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors['background-basic-color-1'] }]}>
@@ -388,7 +429,7 @@ const RandomDotMotionTask = () => {
       <Text style={styles.progress}>
         Trial {currentTrialIndex + 1} of {trials.length}
       </Text>
-      
+
       <TrialComponent
         phase={phase}
         parameters={currentTrial?.parameters}
@@ -398,6 +439,7 @@ const RandomDotMotionTask = () => {
         onFeedback={renderFeedback}
       />
     </View>
+    <TabOptionsSheet ref={sheetRef} />
     </SafeAreaView>
   );
 };
@@ -407,7 +449,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: 'center',
-    // justifyContent: 'space-between',
+    // justifyContent: 'space-between', // Commented out as in original
   },
   title: {
     textAlign: 'center',
@@ -426,10 +468,10 @@ const styles = StyleSheet.create({
     marginTop: 30,
     alignSelf: 'center',
   },
-  buttonContent: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
+  // buttonContent: { // This style was used with contentStyle which is not a valid prop for Button in @ui-kitten/components
+  //   paddingVertical: 8,
+  //   paddingHorizontal: 16,
+  // },
   centeredContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -437,7 +479,7 @@ const styles = StyleSheet.create({
   },
   restingContainer: {
     flex: 1,
-    alignItems: 'center', 
+    alignItems: 'center',
     flexDirection: 'column-reverse',
     // borderWidth: 1, // Removed debug border
     // borderColor: 'red', // Removed debug border
@@ -445,6 +487,8 @@ const styles = StyleSheet.create({
   responseContainer: {
     alignItems: 'center',
     width: '95%',
+    // borderWidth: 1, // Commented out as likely debug
+    // borderColor: 'red', // Commented out as likely debug
   },
   fixationPoint: { // This style can be removed or repurposed
     // width: 10,
@@ -493,7 +537,7 @@ const styles = StyleSheet.create({
   },
   responsePageLayout: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   restingAreaPositioning: {
@@ -504,4 +548,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RandomDotMotionTask;
+export default RandomDotMotionTask; 

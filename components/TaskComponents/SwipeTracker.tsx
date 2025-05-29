@@ -1,5 +1,28 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, PanResponder } from 'react-native';
+import { View, StyleSheet, PanResponder, PanResponderGestureState, ViewStyle } from 'react-native';
+
+interface Point {
+  x: number;
+  y: number;
+  timestamp: number;
+}
+
+export interface SwipeCompleteData {
+  trajectory: Point[];
+  duration: number;
+  startPosition: Point;
+  endPosition: Point;
+}
+
+interface SwipeTrackerProps {
+  onSwipeStart?: (point: Point) => void;
+  onSwipeMove?: (point: Point) => void;
+  onSwipeEnd?: (point: Point) => void;
+  onSwipeComplete?: (data: SwipeCompleteData) => void;
+  active?: boolean;
+  style?: ViewStyle;
+  children?: React.ReactNode;
+}
 
 /**
  * SwipeTracker - A component that tracks swipe movements and trajectories
@@ -11,7 +34,7 @@ import { View, StyleSheet, PanResponder } from 'react-native';
  * @param {boolean} active - Whether tracking is active
  * @param {object} style - Custom styles
  */
-const SwipeTracker = ({ 
+const SwipeTracker: React.FC<SwipeTrackerProps> = ({ 
   onSwipeStart, 
   onSwipeMove, 
   onSwipeEnd, 
@@ -20,10 +43,10 @@ const SwipeTracker = ({
   style,
   children
 }) => {
-  const [displayedTrailPoints, setDisplayedTrailPoints] = useState([]);
-  const currentTrajectoryRef = useRef([]);
-  const startTime = useRef(null);
-  const isTracking = useRef(false);
+  const [displayedTrailPoints, setDisplayedTrailPoints] = useState<Point[]>([]);
+  const currentTrajectoryRef = useRef<Point[]>([]);
+  const startTime = useRef<number | null>(null);
+  const isTracking = useRef<boolean>(false);
   
   const panResponder = useRef(
     PanResponder.create({
@@ -38,7 +61,7 @@ const SwipeTracker = ({
         startTime.current = Date.now();
         currentTrajectoryRef.current = []; // Clear previous trajectory
         
-        const initialPoint = {
+        const initialPoint: Point = {
           x: evt.nativeEvent.locationX,
           y: evt.nativeEvent.locationY,
           timestamp: 0,
@@ -58,7 +81,7 @@ const SwipeTracker = ({
         const currentTime = Date.now();
         const timestamp = currentTime - (startTime.current || currentTime); // Ensure startTime.current is not null
         
-        const position = {
+        const position: Point = {
           x: evt.nativeEvent.locationX,
           y: evt.nativeEvent.locationY,
           timestamp,
@@ -79,7 +102,7 @@ const SwipeTracker = ({
         const currentTime = Date.now();
         const timestamp = currentTime - (startTime.current || currentTime); // Ensure startTime.current is not null
         
-        const finalPoint = {
+        const finalPoint: Point = {
           x: evt.nativeEvent.locationX,
           y: evt.nativeEvent.locationY,
           timestamp,
@@ -157,4 +180,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default SwipeTracker;
+export default SwipeTracker; 

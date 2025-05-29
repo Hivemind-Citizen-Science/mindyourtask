@@ -10,7 +10,8 @@ import { ApplicationProvider, useTheme } from '@ui-kitten/components';
 import { ArrowRightLeft, Gauge, Settings } from 'lucide-react-native'; // Removed Target as it's not used
 import { Tabs } from 'expo-router';
 import * as eva from '@eva-design/eva'; 
-
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';    
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // // This component will now house your Tab Navigator
 // // It will be rendered by app/(tasks)/tasksRoot.tsx
 // export function TaskTabsLayout() { // Exporting this so tasksRoot.tsx can use it
@@ -45,11 +46,15 @@ export default function TasksGroupLayout() { // Renamed to avoid conflict and be
   const theme = useTheme();
 
   return (
+    <GestureHandlerRootView style={{flex: 1}}>
     <ApplicationProvider {...eva} theme={eva.dark}>
+    <BottomSheetModalProvider>
     <Stack screenOptions={{ headerShown: false }}>
     <Stack.Screen name="(main)" options={{ headerShown: false }}/>
     <Stack.Screen name="+not-found" />
     </Stack>
+    </BottomSheetModalProvider>
     </ApplicationProvider>
+    </GestureHandlerRootView>
   );
 }
