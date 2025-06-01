@@ -11,12 +11,13 @@ import taskService from '@/services/taskService';
 import { useRouter } from 'expo-router';
 import { ArrowBigLeft, ArrowBigRight } from 'lucide-react-native';
 import TabOptionsSheet, { TabOptionsSheetRef, Settings as TabSettings } from '@/components/TabOptionsSheet';
+import { Session, Trial, Direction } from '@/lib/types/common';
 
 const { width, height } = Dimensions.get('window');
 
 // Type Definitions
 type Phase = 'initial' | 'resting' | 'stimulus' | 'response' | 'feedback' | 'complete';
-type Direction = 'left' | 'right';
+// type Direction = 'left' | 'right'; // Removed, will use from common
 
 interface TrialParameters {
   direction: Direction;
@@ -25,10 +26,12 @@ interface TrialParameters {
   speed: number;
 }
 
-interface Trial {
-  parameters: TrialParameters;
-  expectedResponse: Direction;
-}
+// interface Trial { // Removed, will use from common
+//   parameters: TrialParameters;
+//   expectedResponse: Direction;
+// }
+interface RandomDotMotionTrial extends Trial<TrialParameters, Direction> {}
+
 
 interface TaskParameters {
   numTrials: number;
@@ -39,10 +42,10 @@ interface TaskParameters {
 }
 
 // Assuming a structure for Session based on usage, though API calls are commented out
-interface Session {
-  id: string; // or number, depending on your API
-  // Add other session properties if known
-}
+// interface Session { // Removed, will use from common
+//   id: string; // or number, depending on your API
+//   // Add other session properties if known
+// }
 
 const RandomDotMotionTask: React.FC = () => {
   const router = useRouter();
@@ -54,7 +57,7 @@ const RandomDotMotionTask: React.FC = () => {
   // Task state
   const [phase, setPhase] = useState<Phase>('initial');
   const [session, setSession] = useState<Session | null>(null);
-  const [trials, setTrials] = useState<Trial[]>([]);
+  const [trials, setTrials] = useState<RandomDotMotionTrial[]>([]);
   const [currentTrialIndex, setCurrentTrialIndex] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [responseStartTime, setResponseStartTime] = useState<number | null>(null);
@@ -149,8 +152,8 @@ const RandomDotMotionTask: React.FC = () => {
   };
 
   // Generate trials
-  const generateTrials = (numTrials: number): Trial[] => {
-    const generatedTrials: Trial[] = [];
+  const generateTrials = (numTrials: number): RandomDotMotionTrial[] => {
+    const generatedTrials: RandomDotMotionTrial[] = [];
 
     for (let i = 0; i < numTrials; i++) {
       // Randomly select direction and coherence
@@ -391,7 +394,7 @@ const RandomDotMotionTask: React.FC = () => {
       <SafeAreaView style={[styles.container, { backgroundColor: themeColors['background-basic-color-1'] }]}>
       <View style={styles.container}>
         <Text category="h1" style={styles.title}>
-          Random Dot Motion Task
+          ...Dots... 
         </Text>
         <Text style={styles.description}>
           In this task, you'll see a cloud of moving dots. Some dots move randomly,

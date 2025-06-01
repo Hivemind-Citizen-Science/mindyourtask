@@ -34,17 +34,22 @@ export default function TabLayout() {
           options={{
             title: 'Random Dot Motion',
             tabBarIcon: ({ color }) => <ArrowRightLeft color={color} />,
-            // headerRight: () => (
-            //   <TouchableOpacity
-            //     onPress={() => sheetRef.current?.open()}
-            //     style={{ marginRight: 16 }}
-            //   >
-            //     <Edit color="#007AFF" size={24} />
-            //   </TouchableOpacity>
-            // ),
           }}
         />
-        {/* Add more Tabs.Screen as needed */}
+        <Tabs.Screen
+          name="position"
+          options={{
+            title: 'Position',
+            tabBarIcon: ({ color }) => <Target color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="velocity"
+          options={{
+            title: 'Velocity',
+            tabBarIcon: ({ color }) => <Gauge color={color} />,
+          }}
+        />
       </Tabs>
       
       {/* Render the bottom sheet outside Tabs so it's always available */}

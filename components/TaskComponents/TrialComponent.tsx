@@ -25,17 +25,7 @@ interface TrialComponentProps {
 
 /**
  * TrialComponent - A flexible component that renders different content based on the current phase of a trial
- * 
- * @param {TrialPhase} phase - Current phase of the trial (resting, stimulus, response, feedback, etc.)
- * @param {object} parameters - Parameters for the current trial
- * @param {function} onResting - Render function for the resting phase
- * @param {function} onStimulus - Render function for the stimulus phase
- * @param {function} onStimulus1 - Render function for the first stimulus phase
- * @param {function} onInterval - Render function for the interval between stimuli
- * @param {function} onStimulus2 - Render function for the second stimulus phase
- * @param {function} onResponse - Render function for the response phase
- * @param {function} onFeedback - Render function for the feedback phase
- */
+ TaskContext */
 const TrialComponent: React.FC<TrialComponentProps> = ({ 
   phase, 
   parameters,
