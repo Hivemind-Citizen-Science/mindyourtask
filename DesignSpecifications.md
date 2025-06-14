@@ -79,19 +79,17 @@ The following are the existing resources. They are not expected to be followed i
 
 **Logo**
 
-![MindYourTask Logo](assets/images/1.png)
+<img src="assets/images/1.png" alt="MindYourTask Logo" height="200" width="200"/>
 
 **Some Screenshots**
 
-![Task 1](assets/images/2.png)
+<img src="assets/images/2.png" alt="Task 1" width="300"/>
+<img src="assets/images/3.png" alt="Task 2" width="300"/>
+<img src="assets/images/4.png" alt="Task 3" width="300"/>
 
-![Task 2](assets/images/3.png)
+<img src="assets/images/5.png" alt="Example Stimulus Screen" width="300"/>
 
-![Task 3](assets/images/4.png)
-
-![Example Stimulus Screen](assets/images/5.png)
-
-![User Response Swipe](assets/images/6.png)
+<img src="assets/images/6.png" alt="User Response Swipe" width="300"/>
 
 
 
