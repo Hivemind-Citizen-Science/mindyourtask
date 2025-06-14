@@ -49,7 +49,7 @@ The notable aspects of *MindYourTask*, in contrast with the traditional experime
  - Informed Consent Screen (here they would be reading important disclaimers and that they consent for the experiments, data etc.). It involves some "Accept" kind of buttons.
 
 
-**Home Screen: ** This could be the most important screen since everytime user opens the app, this is shown. Overall, it has the following important functions:
+**Home Screen:** This could be the most important screen since everytime user opens the app, this is shown. Overall, it has the following important functions:
 
  - Displaying different tasks as icons or tiles etc
  - Some kind of information display on the current status of - whether a task is running, or completed, or disabled because it is just completed, how many times it was completed etc. Nothing is mandatory, but some kind of such information. At the least, say a green tick if it is completed and graying out for disabling. 
@@ -79,5 +79,19 @@ The following are the existing resources. They are not expected to be followed i
 
 **Logo**
 
-[!logo](./assets/images/icon.png)
+![MindYourTask Logo](assets/images/1.png)
+
+**Some Screenshots**
+
+![Task 1](assets/images/2.png)
+
+![Task 2](assets/images/3.png)
+
+![Task 3](assets/images/4.png)
+
+![Example Stimulus Screen](assets/images/5.png)
+
+![User Response Swipe](assets/images/6.png)
+
+
 
